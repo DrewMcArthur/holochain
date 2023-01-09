@@ -172,6 +172,8 @@ jobs:
 
           # use our custom token for more permissions, e.g. "workflow" which is needed to push workflow files
           git config --local "http.https://github.com/.extraheader" "AUTHORIZATION: basic $(echo -n pat:${HRA_GITHUB_TOKEN} | base64)"
+          git config --local user.email "${{ github.actor }}@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
 
           git fetch --all --tags --prune --prune-tags --force
           git branch --list --all
