@@ -20,7 +20,7 @@ on:
       HOLOCHAIN_URL:
         type: string
         required: false
-        default: "https://github.com/holochain/holochain"
+        default: "https://github.com/DavHau/holochain"
       HOLOCHAIN_NIXPKGS_URL:
         type: string
         required: false
