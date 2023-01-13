@@ -543,349 +543,349 @@ jobs:
           ## limits ssh access and adds the ssh public keys of the listed GitHub users
           limit-access-to-users: steveeJ,jost-s,freesig,neonphog,thedavidmeister,maackle
 
-  finalize:
-    if: ${{ always() && needs.prepare.result == 'success' && (needs.test.result == 'success' || needs.test.result == 'skipped') && github.event_name != 'pull_request' && needs.prepare.outputs.releasable_crates == 'true' }}
-    needs: [vars, prepare, test]
-    env:
-      HOLOCHAIN_REPO: ${{ needs.vars.outputs.HOLOCHAIN_REPO }}
-      HOLOCHAIN_RELEASE_SH: ${{ needs.vars.outputs.HOLOCHAIN_RELEASE_SH }}
-      CACHIX_REV: ${{ needs.vars.outputs.CACHIX_REV }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-      - name: Extend space
-        uses: ./.github/actions/extend-space
-      - name: Install nix
-        uses: cachix/install-nix-action@v17
-      - name: Setup cachix
-        uses: cachix/cachix-action@v11
-        with:
-          name: holochain-ci
-          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
-          installCommand: |
-            nix-env -if https://github.com/cachix/cachix/tarball/${CACHIX_REV} \
-              --substituters 'https://cache.nixos.org https://cachix.cachix.org' \
-              --trusted-public-keys 'cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY='
+  # finalize:
+  #   if: ${{ always() && needs.prepare.result == 'success' && (needs.test.result == 'success' || needs.test.result == 'skipped') && github.event_name != 'pull_request' && needs.prepare.outputs.releasable_crates == 'true' }}
+  #   needs: [vars, prepare, test]
+  #   env:
+  #     HOLOCHAIN_REPO: ${{ needs.vars.outputs.HOLOCHAIN_REPO }}
+  #     HOLOCHAIN_RELEASE_SH: ${{ needs.vars.outputs.HOLOCHAIN_RELEASE_SH }}
+  #     CACHIX_REV: ${{ needs.vars.outputs.CACHIX_REV }}
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
+  #     - name: Extend space
+  #       uses: ./.github/actions/extend-space
+  #     - name: Install nix
+  #       uses: cachix/install-nix-action@v17
+  #     - name: Setup cachix
+  #       uses: cachix/cachix-action@v11
+  #       with:
+  #         name: holochain-ci
+  #         authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
+  #         installCommand: |
+  #           nix-env -if https://github.com/cachix/cachix/tarball/${CACHIX_REV} \
+  #             --substituters 'https://cache.nixos.org https://cachix.cachix.org' \
+  #             --trusted-public-keys 'cachix.cachix.org-1:eWNHQldwUO7G2VkjpnjDbWwy4KQ/HNxht7H4SSoMckM= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY='
 
-      - name: Restore the holochain release repository
-        uses: steveeJ-forks/actions-cache/restore@retry
-        with:
-          path: |
-            /var/tmp/holochain_release.sh
-            # asterisk is a workaround for https://github.com/actions/cache/issues/494
-            /var/tmp/holochain_repo/*
-            !/var/tmp/holochain_repo/.cargo/
-            !/var/tmp/holochain_repo/target/
-          key: holochain-repo-${{ github.run_id }}-${{ github.run_number }}
-          required: true
+  #     - name: Restore the holochain release repository
+  #       uses: steveeJ-forks/actions-cache/restore@retry
+  #       with:
+  #         path: |
+  #           /var/tmp/holochain_release.sh
+  #           # asterisk is a workaround for https://github.com/actions/cache/issues/494
+  #           /var/tmp/holochain_repo/*
+  #           !/var/tmp/holochain_repo/.cargo/
+  #           !/var/tmp/holochain_repo/target/
+  #         key: holochain-repo-${{ github.run_id }}-${{ github.run_number }}
+  #         required: true
 
-      - name: Copy the git credentials
-        run: |
-          source ${HOLOCHAIN_RELEASE_SH}
-          cd "${HOLOCHAIN_REPO}"
-          cp -v $HOME/work/holochain/holochain/.git/config .git/config
+  #     - name: Copy the git credentials
+  #       run: |
+  #         source ${HOLOCHAIN_RELEASE_SH}
+  #         cd "${HOLOCHAIN_REPO}"
+  #         cp -v $HOME/work/holochain/holochain/.git/config .git/config
 
-      - name: Restore cargo related state and build files
-        uses: steveeJ-forks/actions-cache/restore@retry
-        with:
-          path: |
-            /var/tmp/holochain_repo/.cargo/bin/
-            /var/tmp/holochain_repo/.cargo/registry/index/
-            /var/tmp/holochain_repo/.cargo/registry/cache/
-            /var/tmp/holochain_repo/.cargo/git/db/
-            /var/tmp/holochain_repo/target/
-          key: ${{ runner.os }}-prepare-${{ github.run_id }}
-          restore-keys: |
-            ${{ runner.os }}-test-
-            ${{ runner.os }}-prepare-
-          required: true
+  #     - name: Restore cargo related state and build files
+  #       uses: steveeJ-forks/actions-cache/restore@retry
+  #       with:
+  #         path: |
+  #           /var/tmp/holochain_repo/.cargo/bin/
+  #           /var/tmp/holochain_repo/.cargo/registry/index/
+  #           /var/tmp/holochain_repo/.cargo/registry/cache/
+  #           /var/tmp/holochain_repo/.cargo/git/db/
+  #           /var/tmp/holochain_repo/target/
+  #         key: ${{ runner.os }}-prepare-${{ github.run_id }}
+  #         restore-keys: |
+  #           ${{ runner.os }}-test-
+  #           ${{ runner.os }}-prepare-
+  #         required: true
 
-      - name: Ensure the git credentials are set
-        env:
-          HRA_GITHUB_TOKEN: ${{ secrets.HRA_GITHUB_TOKEN }}
-        run: |
-          set -xeu
-          source ${HOLOCHAIN_RELEASE_SH}
-          cd "${HOLOCHAIN_REPO}"
+  #     - name: Ensure the git credentials are set
+  #       env:
+  #         HRA_GITHUB_TOKEN: ${{ secrets.HRA_GITHUB_TOKEN }}
+  #       run: |
+  #         set -xeu
+  #         source ${HOLOCHAIN_RELEASE_SH}
+  #         cd "${HOLOCHAIN_REPO}"
 
-          # regenerate the nix sources
-          git config --global user.email "devcore@holochain.org"
-          git config --global user.name "Holochain Core Dev Team"
+  #         # regenerate the nix sources
+  #         git config --global user.email "devcore@holochain.org"
+  #         git config --global user.name "Holochain Core Dev Team"
 
-          # use our custom token for more permissions, e.g. "workflow" which is needed to push workflow files
-          git config --local "http.https://github.com/.extraheader" "AUTHORIZATION: basic $(echo -n pat:${HRA_GITHUB_TOKEN} | base64)"
+  #         # use our custom token for more permissions, e.g. "workflow" which is needed to push workflow files
+  #         git config --local "http.https://github.com/.extraheader" "AUTHORIZATION: basic $(echo -n pat:${HRA_GITHUB_TOKEN} | base64)"
 
-      - name: Push the target branch
-        if: ${{ needs.vars.outputs.dry_run == 'false' }}
-        env:
-          HOLOCHAIN_TARGET_BRANCH: ${{ needs.vars.outputs.holochain_target_branch }}
-        run: |
-          set -xeu
-          source ${HOLOCHAIN_RELEASE_SH}
-          cd "${HOLOCHAIN_REPO}"
+  #     - name: Push the target branch
+  #       if: ${{ needs.vars.outputs.dry_run == 'false' }}
+  #       env:
+  #         HOLOCHAIN_TARGET_BRANCH: ${{ needs.vars.outputs.holochain_target_branch }}
+  #       run: |
+  #         set -xeu
+  #         source ${HOLOCHAIN_RELEASE_SH}
+  #         cd "${HOLOCHAIN_REPO}"
 
-          git status
+  #         git status
 
-          git push origin ${HOLOCHAIN_TARGET_BRANCH}
+  #         git push origin ${HOLOCHAIN_TARGET_BRANCH}
 
-      - name: Push the release branch
-        id: push-release-branch
-        run: |
-          source ${HOLOCHAIN_RELEASE_SH}
-          cd "${HOLOCHAIN_REPO}"
-          git checkout ${RELEASE_BRANCH}
-          git push origin ${RELEASE_BRANCH}
+  #     - name: Push the release branch
+  #       id: push-release-branch
+  #       run: |
+  #         source ${HOLOCHAIN_RELEASE_SH}
+  #         cd "${HOLOCHAIN_REPO}"
+  #         git checkout ${RELEASE_BRANCH}
+  #         git push origin ${RELEASE_BRANCH}
 
-      - name: Publish crates
-        if: ${{ needs.vars.outputs.dry_run == 'false' }}
-        id: publish
-        env:
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        run: |
-          source ${HOLOCHAIN_RELEASE_SH}
-          cd "${HOLOCHAIN_REPO}"
+  #     - name: Publish crates
+  #       if: ${{ needs.vars.outputs.dry_run == 'false' }}
+  #       id: publish
+  #       env:
+  #         CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+  #       run: |
+  #         source ${HOLOCHAIN_RELEASE_SH}
+  #         cd "${HOLOCHAIN_REPO}"
 
-          nix-shell \
-            --pure \
-            --keep CARGO_REGISTRY_TOKEN \
-            --argstr flavor release  --run '
-              release-automation \
-                --workspace-path=$PWD \
-                --log-level=trace \
-                release \
-                  --steps=PublishToCratesIo,AddOwnersToCratesIo
-            '
+  #         nix-shell \
+  #           --pure \
+  #           --keep CARGO_REGISTRY_TOKEN \
+  #           --argstr flavor release  --run '
+  #             release-automation \
+  #               --workspace-path=$PWD \
+  #               --log-level=trace \
+  #               release \
+  #                 --steps=PublishToCratesIo,AddOwnersToCratesIo
+  #           '
 
-      - name: Push the tags
-        if: ${{ needs.vars.outputs.dry_run == 'false' }}
-        id: push-tags
-        run: |
-          set -eu
-          source ${HOLOCHAIN_RELEASE_SH}
-          cd "${HOLOCHAIN_REPO}"
+  #     - name: Push the tags
+  #       if: ${{ needs.vars.outputs.dry_run == 'false' }}
+  #       id: push-tags
+  #       run: |
+  #         set -eu
+  #         source ${HOLOCHAIN_RELEASE_SH}
+  #         cd "${HOLOCHAIN_REPO}"
 
-          git status
+  #         git status
 
-          git push origin ${HOLOCHAIN_TARGET_BRANCH} --tags
+  #         git push origin ${HOLOCHAIN_TARGET_BRANCH} --tags
 
-      - name: Merge release branch into source branch
-        continue-on-error: true
-        id: merge-into-source
-        run: |
-          set -xeu
-          source ${HOLOCHAIN_RELEASE_SH}
-          cd "${HOLOCHAIN_REPO}"
+  #     - name: Merge release branch into source branch
+  #       continue-on-error: true
+  #       id: merge-into-source
+  #       run: |
+  #         set -xeu
+  #         source ${HOLOCHAIN_RELEASE_SH}
+  #         cd "${HOLOCHAIN_REPO}"
 
-          git fetch origin ${HOLOCHAIN_SOURCE_BRANCH}
-          git checkout -B ${HOLOCHAIN_SOURCE_BRANCH} origin/${HOLOCHAIN_SOURCE_BRANCH}
-          git merge ${RELEASE_BRANCH}
+  #         git fetch origin ${HOLOCHAIN_SOURCE_BRANCH}
+  #         git checkout -B ${HOLOCHAIN_SOURCE_BRANCH} origin/${HOLOCHAIN_SOURCE_BRANCH}
+  #         git merge ${RELEASE_BRANCH}
 
-      - name: Push the updated source branch
-        if: ${{ needs.vars.outputs.dry_run == 'false' }}
-        continue-on-error: true
-        run: |
-          set -xeu
-          source ${HOLOCHAIN_RELEASE_SH}
-          cd "${HOLOCHAIN_REPO}"
-          git push origin ${HOLOCHAIN_SOURCE_BRANCH}
+  #     - name: Push the updated source branch
+  #       if: ${{ needs.vars.outputs.dry_run == 'false' }}
+  #       continue-on-error: true
+  #       run: |
+  #         set -xeu
+  #         source ${HOLOCHAIN_RELEASE_SH}
+  #         cd "${HOLOCHAIN_REPO}"
+  #         git push origin ${HOLOCHAIN_SOURCE_BRANCH}
 
-      - name: Create a pull-request towards the source branch
-        id: cpr
-        if: ${{ always() && steps.push-release-branch.outcome == 'success' && (needs.vars.outputs.dry_run == 'true' || (steps.publish.outcome == 'failed' || steps.push-tags.outcome == 'failed' || steps.merge-into-source.outcome == 'failed')) }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.HRA_GITHUB_TOKEN }}
-        run: |
-          set -euE -o pipefail
+  #     - name: Create a pull-request towards the source branch
+  #       id: cpr
+  #       if: ${{ always() && steps.push-release-branch.outcome == 'success' && (needs.vars.outputs.dry_run == 'true' || (steps.publish.outcome == 'failed' || steps.push-tags.outcome == 'failed' || steps.merge-into-source.outcome == 'failed')) }}
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.HRA_GITHUB_TOKEN }}
+  #       run: |
+  #         set -euE -o pipefail
 
-          source ${HOLOCHAIN_RELEASE_SH}
-          cd "${HOLOCHAIN_REPO}"
+  #         source ${HOLOCHAIN_RELEASE_SH}
+  #         cd "${HOLOCHAIN_REPO}"
 
-          gh pr create \
-            --title "Merge ${RELEASE_BRANCH} back into ${HOLOCHAIN_SOURCE_BRANCH}" \
-            --label release \
-            --label "autoupdate:opt-in" \
-            --base ${HOLOCHAIN_SOURCE_BRANCH} --head "${RELEASE_BRANCH}" \
-            --body 'Please double-check the consistency of the CHANGELOG.md files' 2>&1 | tee gh-pr-create.log
-            # --reviewer "holochain/core-dev" \
+  #         gh pr create \
+  #           --title "Merge ${RELEASE_BRANCH} back into ${HOLOCHAIN_SOURCE_BRANCH}" \
+  #           --label release \
+  #           --label "autoupdate:opt-in" \
+  #           --base ${HOLOCHAIN_SOURCE_BRANCH} --head "${RELEASE_BRANCH}" \
+  #           --body 'Please double-check the consistency of the CHANGELOG.md files' 2>&1 | tee gh-pr-create.log
+  #           # --reviewer "holochain/core-dev" \
 
-          pull_request_number="$(tail -n1 gh-pr-create.log | grep -oE '[0-9]+$')"
-          echo "::set-output name=pull-request-number::${pull_request_number}"
+  #         pull_request_number="$(tail -n1 gh-pr-create.log | grep -oE '[0-9]+$')"
+  #         echo "::set-output name=pull-request-number::${pull_request_number}"
 
-      - name: Create a github release
-        if: ${{ needs.vars.outputs.dry_run == 'false' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          HOLOCHAIN_TARGET_BRANCH: ${{ needs.vars.outputs.holochain_target_branch }}
-        run: |
-          set -eu
-          source ${HOLOCHAIN_RELEASE_SH}
-          cd "${HOLOCHAIN_REPO}"
+  #     - name: Create a github release
+  #       if: ${{ needs.vars.outputs.dry_run == 'false' }}
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #         HOLOCHAIN_TARGET_BRANCH: ${{ needs.vars.outputs.holochain_target_branch }}
+  #       run: |
+  #         set -eu
+  #         source ${HOLOCHAIN_RELEASE_SH}
+  #         cd "${HOLOCHAIN_REPO}"
 
-          # a positive condition means the current holochain version has already been released, hence this release doesn't contain holochain
-          if gh release view ${TAG}; then
-            export RELEASE_TAG=${RELEASE_BRANCH}
-            export IS_HOLOCHAIN_RELEASE="false"
-          else
-            export RELEASE_TAG=${TAG}
-            export IS_HOLOCHAIN_RELEASE="true"
-          fi
+  #         # a positive condition means the current holochain version has already been released, hence this release doesn't contain holochain
+  #         if gh release view ${TAG}; then
+  #           export RELEASE_TAG=${RELEASE_BRANCH}
+  #           export IS_HOLOCHAIN_RELEASE="false"
+  #         else
+  #           export RELEASE_TAG=${TAG}
+  #           export IS_HOLOCHAIN_RELEASE="true"
+  #         fi
 
-          gh api \
-            --method POST \
-            -H "Accept: application/vnd.github+json" \
-            /repos/holochain/holochain/releases \
-            -f tag_name="${RELEASE_TAG}" \
-            -f target_commitish="${HOLOCHAIN_TARGET_BRANCH}" \
-            -f name="holochain ${VERSION} (${RELEASE_BRANCH#*-})" \
-            -f body="***Please read [this release's top-level CHANGELOG](https://github.com/holochain/holochain/blob/${HOLOCHAIN_TARGET_BRANCH}/CHANGELOG.md#$(sed -E 's/(release-|\.)//g' <<<"${RELEASE_BRANCH}")) to see the full list of crates that were released together.***" \
-            -F draft=false \
-            -F prerelease=false \
-            -F generate_release_notes=false \
-            -f make_latest="${IS_HOLOCHAIN_RELEASE}"
+  #         gh api \
+  #           --method POST \
+  #           -H "Accept: application/vnd.github+json" \
+  #           /repos/holochain/holochain/releases \
+  #           -f tag_name="${RELEASE_TAG}" \
+  #           -f target_commitish="${HOLOCHAIN_TARGET_BRANCH}" \
+  #           -f name="holochain ${VERSION} (${RELEASE_BRANCH#*-})" \
+  #           -f body="***Please read [this release's top-level CHANGELOG](https://github.com/holochain/holochain/blob/${HOLOCHAIN_TARGET_BRANCH}/CHANGELOG.md#$(sed -E 's/(release-|\.)//g' <<<"${RELEASE_BRANCH}")) to see the full list of crates that were released together.***" \
+  #           -F draft=false \
+  #           -F prerelease=false \
+  #           -F generate_release_notes=false \
+  #           -f make_latest="${IS_HOLOCHAIN_RELEASE}"
 
-      - name: Setup SSH session
-        uses: steveeJ-forks/action-upterm@main
-        if: ${{ failure() && needs.vars.outputs.debug == 'true' }}
-        env:
-          GITHUB_ACTION_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_HRA_ACTION_TOKEN: ${{ secrets.HRA_GITHUB_TOKEN }}
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
-        with:
-          ## limits ssh access and adds the ssh public key for the user which triggered the workflow
-          limit-access-to-actor: true
-          ## limits ssh access and adds the ssh public keys of the listed GitHub users
-          limit-access-to-users: steveeJ,jost-s,freesig,neonphog,thedavidmeister,maackle
+  #     - name: Setup SSH session
+  #       uses: steveeJ-forks/action-upterm@main
+  #       if: ${{ failure() && needs.vars.outputs.debug == 'true' }}
+  #       env:
+  #         GITHUB_ACTION_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #         GITHUB_HRA_ACTION_TOKEN: ${{ secrets.HRA_GITHUB_TOKEN }}
+  #         CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+  #       with:
+  #         ## limits ssh access and adds the ssh public key for the user which triggered the workflow
+  #         limit-access-to-actor: true
+  #         ## limits ssh access and adds the ssh public keys of the listed GitHub users
+  #         limit-access-to-users: steveeJ,jost-s,freesig,neonphog,thedavidmeister,maackle
 
-  github-actions-ci-jobs-succeed:
-    if: ${{ always() && github.event_name == 'pull_request' }}
-    runs-on: "ubuntu-latest"
-    needs: [vars, prepare]
-    steps:
-      - name: Check status
-        id: check-status
-        env:
-          RESULTS: "${{ toJSON(needs.*.result) }}"
-          DRY_RUN: "${{ needs.vars.outputs.dry_run }}"
-          SKIP_TEST: "${{ needs.vars.outputs.skip_test }}"
-        run: |
-          [[ $(jq -n 'env.RESULTS | fromjson | unique == ["success"]') == 'true' ]] || \
-          [[ (${DRY_RUN} == 'true' || ${SKIP_TEST} == 'true') && $(jq -n 'env.RESULTS | fromjson | unique | sort == ["skipped", "success"]') == 'true' ]]
+  # github-actions-ci-jobs-succeed:
+  #   if: ${{ always() && github.event_name == 'pull_request' }}
+  #   runs-on: "ubuntu-latest"
+  #   needs: [vars, prepare]
+  #   steps:
+  #     - name: Check status
+  #       id: check-status
+  #       env:
+  #         RESULTS: "${{ toJSON(needs.*.result) }}"
+  #         DRY_RUN: "${{ needs.vars.outputs.dry_run }}"
+  #         SKIP_TEST: "${{ needs.vars.outputs.skip_test }}"
+  #       run: |
+  #         [[ $(jq -n 'env.RESULTS | fromjson | unique == ["success"]') == 'true' ]] || \
+  #         [[ (${DRY_RUN} == 'true' || ${SKIP_TEST} == 'true') && $(jq -n 'env.RESULTS | fromjson | unique | sort == ["skipped", "success"]') == 'true' ]]
 
-      - name: Post mattermost message
-        if: always()
-        shell: bash
-        continue-on-error: true
-        env:
-          STATUS: ${{ steps.check-status.outcome }}
-          VERSION: ${{ needs.prepare.outputs.version }}
-          TAG: ${{ needs.prepare.outputs.tag }}
-          WORKFLOW_RUN_URL: "https://github.com/holochain/holochain/actions/runs/${{ github.run_id }}"
-          HRA_MATTERMOST_TOKEN: ${{ secrets.HRA_MATTERMOST_TOKEN }}
+  #     - name: Post mattermost message
+  #       if: always()
+  #       shell: bash
+  #       continue-on-error: true
+  #       env:
+  #         STATUS: ${{ steps.check-status.outcome }}
+  #         VERSION: ${{ needs.prepare.outputs.version }}
+  #         TAG: ${{ needs.prepare.outputs.tag }}
+  #         WORKFLOW_RUN_URL: "https://github.com/holochain/holochain/actions/runs/${{ github.run_id }}"
+  #         HRA_MATTERMOST_TOKEN: ${{ secrets.HRA_MATTERMOST_TOKEN }}
 
-          # dev/holochain-rsm/CI
-          MM_CHANNEL_ID: "uzjosy5d3fdcxe35oyw9naihfw"
-        run: |
-          set -xeEu
+  #         # dev/holochain-rsm/CI
+  #         MM_CHANNEL_ID: "uzjosy5d3fdcxe35oyw9naihfw"
+  #       run: |
+  #         set -xeEu
 
-          if [[ "${STATUS}" == "success" ]]; then
-            holochain_status=":white_check_mark:"
-          else
-            holochain_status=":x:"
-          fi
+  #         if [[ "${STATUS}" == "success" ]]; then
+  #           holochain_status=":white_check_mark:"
+  #         else
+  #           holochain_status=":x:"
+  #         fi
 
-          holochain_status="${holochain_status} [log](${WORKFLOW_RUN_URL})"
+  #         holochain_status="${holochain_status} [log](${WORKFLOW_RUN_URL})"
 
-          message=$(cat <<-EOF
-          #### Holochain release run (ci-mode)
+  #         message=$(cat <<-EOF
+  #         #### Holochain release run (ci-mode)
 
-          Version | ${VERSION}
-          --- | ---
-          holochain | ${holochain_status}
-          EOF
-          )
-          export message
+  #         Version | ${VERSION}
+  #         --- | ---
+  #         holochain | ${holochain_status}
+  #         EOF
+  #         )
+  #         export message
 
-          data=$(jq -n --compact-output '{"channel_id":env.MM_CHANNEL_ID, "message":env.message, "props":{"version":env.VERSION}}')
-          curl -X POST -H "Authorization: Bearer ${HRA_MATTERMOST_TOKEN}" -d "$data" https://chat.holochain.org/api/v4/posts
+  #         data=$(jq -n --compact-output '{"channel_id":env.MM_CHANNEL_ID, "message":env.message, "props":{"version":env.VERSION}}')
+  #         curl -X POST -H "Authorization: Bearer ${HRA_MATTERMOST_TOKEN}" -d "$data" https://chat.holochain.org/api/v4/posts
 
-      - name: Trigger status event
-        if: always()
-        shell: bash
-        continue-on-error: true
-        env:
-          STATUS: ${{ steps.check-status.outcome }}
-          WORKFLOW_RUN_URL: "https://github.com/holochain/holochain/actions/runs/${{ github.run_id }}"
-        run: |
-          set -x
+  #     - name: Trigger status event
+  #       if: always()
+  #       shell: bash
+  #       continue-on-error: true
+  #       env:
+  #         STATUS: ${{ steps.check-status.outcome }}
+  #         WORKFLOW_RUN_URL: "https://github.com/holochain/holochain/actions/runs/${{ github.run_id }}"
+  #       run: |
+  #         set -x
 
-          data=$(jq -n --compact-output '{
-            "state":env.STATUS,
-            "target_url":env.WORKFLOW_RUN_URL,
-            "description":"release workflow completed",
-            "context":"github-actions/relelase-holochain"
-          }')
-          curl -L -X POST \
-            -H "Content-Type: application/json" \
-            -H "Authorization: token ${{ secrets.HRA_GITHUB_TOKEN}}" \
-            -d "$data" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${{ github.sha }}"
+  #         data=$(jq -n --compact-output '{
+  #           "state":env.STATUS,
+  #           "target_url":env.WORKFLOW_RUN_URL,
+  #           "description":"release workflow completed",
+  #           "context":"github-actions/relelase-holochain"
+  #         }')
+  #         curl -L -X POST \
+  #           -H "Content-Type: application/json" \
+  #           -H "Authorization: token ${{ secrets.HRA_GITHUB_TOKEN}}" \
+  #           -d "$data" \
+  #           "https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${{ github.sha }}"
 
-  all-jobs-succeed:
-    if: ${{ always() && github.event_name != 'pull_request' }}
-    runs-on: "ubuntu-latest"
-    needs: [vars, prepare, test, finalize]
-    steps:
-      - name: Check status
-        id: check-status
-        env:
-          RESULTS: "${{ toJSON(needs.*.result) }}"
-          DRY_RUN: "${{ needs.vars.outputs.dry_run }}"
-          SKIP_TEST: "${{ needs.vars.outputs.skip_test }}"
-        run: |
-          [[ $(jq -n 'env.RESULTS | fromjson | unique == ["success"]') == 'true' ]] || \
-          [[ (${DRY_RUN} == 'true' || ${SKIP_TEST} == 'true') && $(jq -n 'env.RESULTS | fromjson | unique | sort == ["skipped", "success"]') == 'true' ]]
+  # all-jobs-succeed:
+  #   if: ${{ always() && github.event_name != 'pull_request' }}
+  #   runs-on: "ubuntu-latest"
+  #   needs: [vars, prepare, test, finalize]
+  #   steps:
+  #     - name: Check status
+  #       id: check-status
+  #       env:
+  #         RESULTS: "${{ toJSON(needs.*.result) }}"
+  #         DRY_RUN: "${{ needs.vars.outputs.dry_run }}"
+  #         SKIP_TEST: "${{ needs.vars.outputs.skip_test }}"
+  #       run: |
+  #         [[ $(jq -n 'env.RESULTS | fromjson | unique == ["success"]') == 'true' ]] || \
+  #         [[ (${DRY_RUN} == 'true' || ${SKIP_TEST} == 'true') && $(jq -n 'env.RESULTS | fromjson | unique | sort == ["skipped", "success"]') == 'true' ]]
 
-      - name: Post mattermost message
-        if: always()
-        continue-on-error: true
-        env:
-          STATUS: ${{ steps.check-status.outcome }}
-          VERSION: ${{ needs.prepare.outputs.version }}
-          TAG: ${{ needs.prepare.outputs.tag }}
-          WORKFLOW_RUN_URL: "https://github.com/holochain/holochain/actions/runs/${{ github.run_id }}"
-          HRA_MATTERMOST_TOKEN: ${{ secrets.HRA_MATTERMOST_TOKEN }}
-          DRY_RUN: "${{ needs.vars.outputs.dry_run }}"
-          RELEASABLE_CRATES: ${{ needs.prepare.outputs.releasable_crates }}
+  #     - name: Post mattermost message
+  #       if: always()
+  #       continue-on-error: true
+  #       env:
+  #         STATUS: ${{ steps.check-status.outcome }}
+  #         VERSION: ${{ needs.prepare.outputs.version }}
+  #         TAG: ${{ needs.prepare.outputs.tag }}
+  #         WORKFLOW_RUN_URL: "https://github.com/holochain/holochain/actions/runs/${{ github.run_id }}"
+  #         HRA_MATTERMOST_TOKEN: ${{ secrets.HRA_MATTERMOST_TOKEN }}
+  #         DRY_RUN: "${{ needs.vars.outputs.dry_run }}"
+  #         RELEASABLE_CRATES: ${{ needs.prepare.outputs.releasable_crates }}
 
-          # dev/HC-releases
-          MM_CHANNEL_ID: "cdxeytdc97ff3e1jbdzgyfcduo"
-        run: |
-          if [[ "${STATUS}" == "success" ]]; then
-            # TODO: adapt tag to case where holochain isn't released
-            holochain_status="success :white_check_mark: [log](${WORKFLOW_RUN_URL}), [tag](https://github.com/holochain/holochain/releases/tag/${TAG})"
-          elif [[ "${RELEASABLE_CRATES}" == "false" ]]; then
-            holochain_status="no changes to release :ballot_box_with_check: [log](${WORKFLOW_RUN_URL})"
-          else
-            holochain_status="failure :x: [log](${WORKFLOW_RUN_URL})"
-          fi
+  #         # dev/HC-releases
+  #         MM_CHANNEL_ID: "cdxeytdc97ff3e1jbdzgyfcduo"
+  #       run: |
+  #         if [[ "${STATUS}" == "success" ]]; then
+  #           # TODO: adapt tag to case where holochain isn't released
+  #           holochain_status="success :white_check_mark: [log](${WORKFLOW_RUN_URL}), [tag](https://github.com/holochain/holochain/releases/tag/${TAG})"
+  #         elif [[ "${RELEASABLE_CRATES}" == "false" ]]; then
+  #           holochain_status="no changes to release :ballot_box_with_check: [log](${WORKFLOW_RUN_URL})"
+  #         else
+  #           holochain_status="failure :x: [log](${WORKFLOW_RUN_URL})"
+  #         fi
 
-          mode="release-mode"
-          if [[ "${DRY_RUN}" == "true" ]]; then
-            mode="${mode}, dry-run"
-          fi
+  #         mode="release-mode"
+  #         if [[ "${DRY_RUN}" == "true" ]]; then
+  #           mode="${mode}, dry-run"
+  #         fi
 
-          message=$(cat <<-EOF
-          #### Holochain release run (${mode})
+  #         message=$(cat <<-EOF
+  #         #### Holochain release run (${mode})
 
-          Version | ${VERSION}
-          --- | ---
-          holochain | ${holochain_status}
-          holochain-nixpkgs | _undetermined_
-          holonix | _undetermined_
-          EOF
-          )
-          export message
+  #         Version | ${VERSION}
+  #         --- | ---
+  #         holochain | ${holochain_status}
+  #         holochain-nixpkgs | _undetermined_
+  #         holonix | _undetermined_
+  #         EOF
+  #         )
+  #         export message
 
-          data=$(jq -n --compact-output '{"channel_id":env.MM_CHANNEL_ID, "message":env.message, "props":{"version":env.VERSION}}')
-          curl -X POST -H "Authorization: Bearer ${HRA_MATTERMOST_TOKEN}" -d "$data" https://chat.holochain.org/api/v4/posts
+  #         data=$(jq -n --compact-output '{"channel_id":env.MM_CHANNEL_ID, "message":env.message, "props":{"version":env.VERSION}}')
+  #         curl -X POST -H "Authorization: Bearer ${HRA_MATTERMOST_TOKEN}" -d "$data" https://chat.holochain.org/api/v4/posts
