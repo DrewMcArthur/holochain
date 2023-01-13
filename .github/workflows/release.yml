@@ -202,7 +202,7 @@ jobs:
   #     HRA_GITHUB_TOKEN: ${{ secrets.HRA_GITHUB_TOKEN}}
 
   test:
-    needs: [vars, prepare]
+    needs: [vars]
     if: ${{ github.event_name != 'pull_request' && needs.vars.outputs.skip_test != 'true' }}
     env:
       HOLOCHAIN_REPO: ${{ needs.vars.outputs.HOLOCHAIN_REPO }}
