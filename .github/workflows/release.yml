@@ -224,6 +224,11 @@ jobs:
             largeCacheStorage:
               nix:
                 - cachix
+          - arch: macos-aarch64
+            runs-on: [self-hosted]
+            largeCacheStorage:
+              nix:
+                - cachix
           - arch: linux-x86_64
             runs-on: [ubuntu-latest]
             largeCacheStorage:
