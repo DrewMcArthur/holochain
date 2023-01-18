@@ -24,10 +24,11 @@ hcMkShell {
       crate2nix
     ])
     ++ (lib.optionals pkgs.stdenv.isDarwin
-      (with pkgs.darwin; [
-        Security
-        IOKit
-        apple_sdk_11_0.frameworks.CoreFoundation
+      (with pkgs; [
+        libiconv
+        darwin.Security
+        darwin.IOKit
+        darwin.apple_sdk_11_0.frameworks.CoreFoundation
       ])
     )
     ;
